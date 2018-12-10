@@ -10,6 +10,9 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QFileDialog, QMessageBox,
                              QCheckBox, QHBoxLayout, QProgressDialog)
 from PyQt5.QtGui import QPixmap
+from collections import OrderedDict
+from convert import FullConverter
+from shutil import copyfile
 
 import os
 
@@ -103,7 +106,6 @@ class Ui_Dialog(object):
         self.pic.setObjectName("pic")
 
         self.retranslateUi(Dialog)
-        self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -189,6 +191,45 @@ class ProcessDialog(QWidget):
                 QMessageBox.information(self, "提示", "操作成功")
                 break
 
+class saveFDialog(QWidget):
+
+    def __init__(self, filename=None, filters=None):
+        super().__init__()
+        self.filters = filters
+        self.title = '保存文件'
+        self.left = 10
+        self.top = 10
+        self.width = 640
+        self.height = 480
+        self._filename = filename
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+
+        self.saveFileNameDialog()
+
+        self.show()
+
+    def saveFileNameDialog(self):    
+        if self.filters:
+            filters = self.filters
+        else:
+            filters = ("pdf Files (*.pdf);;"
+                       )
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self, self.title, "合成.pdf",
+                                                  filters, options=options)
+        if fileName:
+            if fileName.endswith('.pdf'):
+                self.saveName = fileName
+            else:
+                self.saveName = fileName + '.pdf'
+        elif self._filename == '' or self._filename is None:
+            pass
+
 class openFDialog(QWidget):
 
     def __init__(self, filename=None, filters=None):
@@ -249,6 +290,7 @@ class MainDialog(Ui_Dialog):
         self.del4.clicked.connect(self.delFile4)
         self.table4.cellClicked.connect(self.showPic4)
         self.contents = {}
+        self.buttonBox.accepted.connect(self.convert)
         self.picfilters = "图像文件(*.jpg *.jpeg *.png *.bmp)"
 
     def setPic(self, pic):
@@ -601,15 +643,28 @@ class MainDialog(Ui_Dialog):
         return 0
 
     def getDataList(self):
-        data = []
+        data = OrderedDict()
         for tab in [self.table1, self.table2, self.table3, self.table4]:
             i = 0
             while i < tab.rowCount():
                 fname = tab.item(i, 0).text()
-                data.append(self.contents[fname])
+                data[fname] = self.contents[fname]
                 i += 1
 
         return data
+
+    def convert(self):
+        data = self.getDataList()
+        c = FullConverter(data)
+        c.check()
+        if c.errcode != 0:
+            PopupWindow(c.err)
+        else:
+            c.convert()
+            c.setMark()
+            outfile = c.concat()
+            saveDialog = saveFDialog()
+            copyfile(outfile, saveDialog.saveName)
 
 class PopupWindow(QWidget):
 
