@@ -15,8 +15,9 @@
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from PyPDF2.utils import PdfReadError
 from reportlab.pdfgen import canvas
+from PIL import Image
 import zipfile
-# import comtypes.client
+# import win32com.client
 from tempfile import mktemp
 
 class Mixin(object):
@@ -119,25 +120,28 @@ class Converter(Mixin):
         """word转为pdf"""
         tempfile = mktemp()
         wdFormatPDF = 17
-        word = comtypes.client.CreateObject('Word.Application')
+        word = win32com.client.Dispatch('Word.Application')
+        # word = comtypes.client.CreateObject('Word.Application')
         doc = word.Documents.Open(filename)
         doc.SaveAs(tempfile, FileFormat=wdFormatPDF)
         doc.Close()
         word.Quit()
 
-        return tempfile
+        return "{}.pdf".format(tempfile)
 
     def xlsToPdf(self, filename):
         """execl转为pdf"""
         tempfile = mktemp()
-        excel = comtypes.client.CreateObject('Excel.Application')
+        xlFormatPDF = 57
+        # excel = comtypes.client.CreateObject('Excel.Application')
+        excel = win32com.client.Dispatch('Excel.Application')
         wb = excel.Workbooks.Open(filename)
         ws = wb.Worksheets[1]
-        wb.SaveAs(tempfile, FileFormat=57)
+        wb.SaveAs(tempfile, FileFormat=xlFormatPDF)
         wb.Close()
         excel.Quit()
 
-        return tempfile
+        return "{}.pdf".format(tempfile)
 
     def convert(self):
         """转换为pdf
@@ -176,9 +180,11 @@ class WaterMark(Mixin):
         # 按照黄金分割率放置图片
         width = float(mdbox[2] - mdbox[0])
         height = float(mdbox[3] - mdbox[1])
+        # 渲染图片
+        img = self.transparent(item[1])
         # 新建一个新的pdf
         c = canvas.Canvas(tempmark)
-        c.drawImage(item[1], width * rate, height * rate)
+        c.drawImage(img, width * rate, height * rate, mask='auto')
         c.save()
         # 打开pdf
         watermark = PdfFileReader(open(tempmark, 'rb'))
@@ -203,6 +209,28 @@ class WaterMark(Mixin):
         for item in [*self.doc, *self.xls, *self.pdf]:
             if isinstance(self.files[item][1], str):
                 self.files[item][0] = self.mark(item)
+
+    def transparent(self, image):
+        """透明化处理"""
+        handle_file = mktemp() + '.png'
+        img = Image.open(image)
+        # 全部设为0.75透明
+        img.putalpha(192)
+        # 处理全部白色为全透明
+        img = img.convert("RGBA")
+        data = img.getdata()
+
+        new_data = []
+        for ele in data:
+            if ele[0] == 255 and ele[1] == 255\
+                    and ele[2] == 255:
+                new_data.append((255, 255, 255, 0))
+            else:
+                new_data.append(ele)
+        img.putdata(new_data)
+        img.save(handle_file, "PNG")
+
+        return handle_file
 
 class FullConverter(Checker, Converter, WaterMark):
 
