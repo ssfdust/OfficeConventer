@@ -19,6 +19,7 @@ from PIL import Image
 import zipfile
 # import win32com.client
 from tempfile import mktemp
+from threading import Thread
 
 class Mixin(object):
 
@@ -36,10 +37,13 @@ class Mixin(object):
         self.files = files
         self.err = None
         self.errcode = 0
+        self.prgbar_max = 0
+        self.prgbar_val = 0
         self.state = 0
         self.doc = []
         self.xls = []
         self.pdf = []
+        self.outfile = None
 
 class Checker(Mixin):
 
@@ -51,8 +55,11 @@ class Checker(Mixin):
 
             如果合法的话，就按照分类分好
         """
+        self.prgbar_max = len(self.files.keys())
+        self.prgbar_val = 0
         for item in self.files.keys():
             self.state = 1
+            self.prgbar_val += 1
             filepath = self.files[item][0]
             if filepath.endswith('.pdf'):
                 if not self.isValidPdf(filepath):
@@ -147,11 +154,15 @@ class Converter(Mixin):
         """转换为pdf
         """
         self.state = 2
+        self.prgbar_max = len(self.doc) + len(self.xls)
+        self.prgbar_val = 0
         for item in self.doc:
+            self.prgbar_val += 1
             filepath = self.files[item][0]
             trans = self.docToPdf(filepath)
             self.files[item][0] = trans
         for item in self.xls:
+            self.prgbar_val += 1
             filepath = self.files[item][0]
             trans = self.xlsToPdf(filepath)
             self.files[item][0] = trans
@@ -194,6 +205,7 @@ class WaterMark(Mixin):
 
         # 为每一页添加水印
         for page_num in range(pagecount):
+            self.prgbar_val += 1
             inpage = infile.getPage(page_num)
             inpage.mergePage(watermark.getPage(0))
             outfile.addPage(inpage)
@@ -206,6 +218,15 @@ class WaterMark(Mixin):
 
     def setMark(self):
         self.state = 3
+        self.prgbar_max = 0
+        self.prgbar_val = 0
+        # 计算总页数
+        for item in [*self.doc, *self.xls, *self.pdf]:
+            if isinstance(self.files[item][1], str):
+                src = self.files[item][0]
+                pdfreader = PdfFileReader(open(src, 'rb'))
+                self.prgbar_max += pdfreader.getNumPages()
+        # 操作
         for item in [*self.doc, *self.xls, *self.pdf]:
             if isinstance(self.files[item][1], str):
                 self.files[item][0] = self.mark(item)
@@ -236,12 +257,20 @@ class FullConverter(Checker, Converter, WaterMark):
 
     def concat(self):
         """将多个pdf文件合成一个"""
+        self.prgbar_max = 0
+        self.prgbar_val = 0
         tempout = mktemp()
         outfile = PdfFileWriter()
+        # 计算总页数
+        for item in [*self.doc, *self.xls, *self.pdf]:
+            src = self.files[item][0]
+            pdfreader = PdfFileReader(open(src, 'rb'))
+            self.prgbar_max += pdfreader.getNumPages()
         for item in self.files.values():
             infile = PdfFileReader(open(item[0], 'rb'))
             pagecount = infile.getNumPages()
             for page_num in range(pagecount):
+                self.prgbar_val += 1
                 inpage = infile.getPage(page_num)
                 outfile.addPage(inpage)
 
@@ -249,3 +278,20 @@ class FullConverter(Checker, Converter, WaterMark):
             outfile.write(pdfout)
 
         return tempout
+
+    def execute(self):
+        """执行流程与check处理
+        """
+        self.check()
+        if self.errcode != 0:
+            return 1
+        else:
+            self.convert()
+            self.setMark()
+            self.outfile = self.concat()
+
+    def run_thread(self):
+        """多线程方式运行
+        """
+        t = Thread(target=self.execute, args=None)
+        t.start()

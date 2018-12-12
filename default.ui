@@ -112,10 +112,21 @@ QHeaderView::section::vertical{
     <property name="text">
      <string/>
     </property>
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+    </property>
    </item>
    <item row="0" column="1">
     <property name="text">
      <string/>
+    </property>
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="2">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
     </property>
    </item>
   </widget>
@@ -220,6 +231,24 @@ QHeaderView::section::vertical{
      <string/>
     </property>
    </column>
+   <item row="0" column="0">
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="1">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="2">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
   </widget>
   <widget class="QTableWidget" name="table2">
    <property name="geometry">
@@ -295,6 +324,24 @@ QHeaderView::section::vertical{
      <string/>
     </property>
    </column>
+   <item row="0" column="0">
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="1">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="2">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
   </widget>
   <widget class="QPushButton" name="select2">
    <property name="geometry">
@@ -393,6 +440,19 @@ QHeaderView::section::vertical{
    <item row="0" column="0">
     <property name="text">
      <string/>
+    </property>
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="1">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
+    </property>
+   </item>
+   <item row="0" column="2">
+    <property name="flags">
+     <set>ItemIsSelectable|ItemIsEnabled</set>
     </property>
    </item>
   </widget>

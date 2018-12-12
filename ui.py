@@ -18,6 +18,8 @@ from demo import Ui_Dialog
 import os
 
 class ProcessDialog(QWidget):
+    """进度条对话框
+    """
 
     def __init__(self, filename=None):
         super().__init__()
@@ -67,6 +69,10 @@ class ProcessDialog(QWidget):
                 break
 
 class saveFDialog(QWidget):
+    """保存对话框
+
+    选择文件后，选择文件在self.fileName属性
+    """
 
     def __init__(self, filename=None, filters=None):
         super().__init__()
@@ -94,6 +100,7 @@ class saveFDialog(QWidget):
             filters = ("pdf Files (*.pdf);;"
                        )
         options = QFileDialog.Options()
+        # 使用原生对话框
         # options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getSaveFileName(self, self.title, "合成.pdf",
                                                   filters, options=options)
@@ -102,10 +109,11 @@ class saveFDialog(QWidget):
                 self.saveName = fileName
             else:
                 self.saveName = fileName + '.pdf'
-        elif self._filename == '' or self._filename is None:
-            pass
 
 class openFDialog(QWidget):
+    """打开文件对话框
+
+    """
 
     def __init__(self, filename=None, filters=None):
         super().__init__()
@@ -145,7 +153,17 @@ class openFDialog(QWidget):
             pass
 
 class MainDialog(Ui_Dialog):
+    """主对话框
+    """
     def __init__(self, dialog):
+        """设置slot连接
+
+        contents为字典类型，字典key为文件名，
+        字典value为一个保存两个元素的数组，第
+        一个元素保存的为文件路径，第二个元素
+        保存的为印章文件。
+        如果没有印章文件则以数字0代替。
+        """
         Ui_Dialog.__init__(self)
         self.setupUi(dialog)
         self.select1.clicked.connect(self.openFile1)
@@ -162,20 +180,35 @@ class MainDialog(Ui_Dialog):
         self.picfilters = "图像文件(*.jpg *.jpeg *.png *.bmp)"
 
     def setPic(self, table, pic):
+        """针对特定表格设定印章图案
+        """
         tablename = table.objectName()
         picobj = getattr(self, "pic{}".format(tablename.replace('table', '')))
         picobj.setPixmap(QPixmap(pic))
 
     def handleClicked1(self, item):
+        """处理打勾事件
+
+        打勾后，弹出打开文件对话框，选择印章图案
+        ，更换印章图片，并将contents部分图片修改
+        为替换的图片。
+        """
+        # 获取发送信号的控件
         chCliked = self.table1.sender()
+        # 根据其父类Widget的layout
+        # 才能获取正确QPoint
         layout = chCliked.parent().layout()
         posWidget = chCliked.parent().pos()
+        # 根据QPoint获取行号
         rowIndex = self.table1.indexAt(posWidget).row()
+        # 获取对象
         nameItem = self.table1.item(rowIndex, 0)
         fname = nameItem.text()
         btn = layout.itemAt(1).widget()
+        # 处理是打勾还是去掉打勾
         if item:
             openPicHandler = openFDialog(filters=self.picfilters)
+            # 如果文件被选择，则进行处理
             if hasattr(openPicHandler, 'fileName'):
                 self.contents[fname][1] = openPicHandler.fileName
                 self.setPic(self.table1, openPicHandler.fileName)
@@ -187,6 +220,9 @@ class MainDialog(Ui_Dialog):
             btn.hide()
 
     def handleClicked2(self, item):
+        """TODO:
+            合并为一个
+        """
         chCliked = self.table2.sender()
         layout = chCliked.parent().layout()
         posWidget = chCliked.parent().pos()
@@ -207,6 +243,9 @@ class MainDialog(Ui_Dialog):
             btn.hide()
 
     def handleClicked3(self, item):
+        """TODO:
+            合并为一个
+        """
         chCliked = self.table3.sender()
         layout = chCliked.parent().layout()
         posWidget = chCliked.parent().pos()
@@ -227,6 +266,9 @@ class MainDialog(Ui_Dialog):
             btn.hide()
 
     def handleClicked4(self, item):
+        """TODO:
+            合并为一个
+        """
         chCliked = self.table4.sender()
         layout = chCliked.parent().layout()
         posWidget = chCliked.parent().pos()
@@ -247,17 +289,26 @@ class MainDialog(Ui_Dialog):
             btn.hide()
 
     def selPic1(self):
+        """修改图片
+        """
+        # 获取被点击的图片
         chCliked = self.table1.sender()
+        # 获取Widget的位置
         posWidget = chCliked.parent().pos()
         rowIndex = self.table1.indexAt(posWidget).row()
+        # 获取名称
         nameItem = self.table1.item(rowIndex, 0)
         fname = nameItem.text()
         openPicHandler = openFDialog(filters=self.picfilters)
+        # 判断修改
         if hasattr(openPicHandler, 'fileName'):
             self.contents[fname][1] = openPicHandler.fileName
             self.setPic(self.table1, openPicHandler.fileName)
 
     def selPic2(self):
+        """TODO:
+            合并为一个
+        """
         chCliked = self.table2.sender()
         posWidget = chCliked.parent().pos()
         rowIndex = self.table2.indexAt(posWidget).row()
@@ -269,6 +320,9 @@ class MainDialog(Ui_Dialog):
             self.setPic(self.table2, openPicHandler.fileName)
 
     def selPic3(self):
+        """TODO:
+            合并为一个
+        """
         chCliked = self.table3.sender()
         posWidget = chCliked.parent().pos()
         rowIndex = self.table3.indexAt(posWidget).row()
@@ -280,6 +334,9 @@ class MainDialog(Ui_Dialog):
             self.setPic(self.table3, openPicHandler.fileName)
 
     def selPic4(self):
+        """TODO:
+            合并为一个
+        """
         chCliked = self.table4.sender()
         posWidget = chCliked.parent().pos()
         rowIndex = self.table4.indexAt(posWidget).row()
@@ -291,53 +348,96 @@ class MainDialog(Ui_Dialog):
             self.setPic(self.table3, openPicHandler.fileName)
 
     def showPic1(self, row, col):
+        """处理cellClicked事件
+
+            如果点击cell，则根据行列，
+            设置预览的印章
+        """
+        # 过滤掉用户点击其他cell导致错误
         if col > 0:
             return 1
+        # 获取元素
         item = self.table1.item(row, col)
-        fname = item.text()
-        pic = self.contents[fname][1]
-        if isinstance(pic, str):
-            self.setPic(self.table1, pic)
+        try:
+            fname = item.text()
+            pic = self.contents[fname][1]
+            if isinstance(pic, str):
+                self.setPic(self.table1, pic)
+        except Exception:
+            pass
 
     def showPic2(self, row, col):
+        """TODO:
+            合并为一个
+        """
         if col > 0:
             return 1
-        item = self.table2.item(row, col)
-        fname = item.text()
-        pic = self.contents[fname][1]
-        if isinstance(pic, str):
-            self.setPic(self.table2, pic)
+        try:
+            item = self.table2.item(row, col)
+            fname = item.text()
+            pic = self.contents[fname][1]
+            if isinstance(pic, str):
+                self.setPic(self.table2, pic)
+        except Exception:
+            pass
 
     def showPic3(self, row, col):
+        """TODO:
+            合并为一个
+        """
         if col > 0:
             return 1
-        item = self.table3.item(row, col)
-        fname = item.text()
-        pic = self.contents[fname][1]
-        if isinstance(pic, str):
-            self.setPic(self.table3, pic)
+        try:
+            item = self.table3.item(row, col)
+            fname = item.text()
+            pic = self.contents[fname][1]
+            if isinstance(pic, str):
+                self.setPic(self.table3, pic)
+        except Exception:
+            pass
 
     def showPic4(self, row, col):
+        """TODO:
+            合并为一个
+        """
         if col > 0:
             return 1
-        item = self.table4.item(row, col)
-        fname = item.text()
-        pic = self.contents[fname][1]
-        if isinstance(pic, str):
-            self.setPic(self.table4, pic)
+        try:
+            item = self.table4.item(row, col)
+            fname = item.text()
+            pic = self.contents[fname][1]
+            if isinstance(pic, str):
+                self.setPic(self.table4, pic)
+        except Exception:
+            pass
 
     def openFile1(self):
+        """处理选择按钮点击事件
+
+        文件被选中后，将会依次在新的一行中插入文字，
+        勾选框，修改按钮（默认隐藏）以及删除按钮。
+        """
+        # 构建打开对话框
         openFileHandler = openFDialog('')
+        # 处理备选文件
         if hasattr(openFileHandler, 'fileName'):
+            # 获取默认名称
             fname = os.path.basename(openFileHandler.fileName)
+            # 过滤重名文件
+            # Tip: 能否允许重名文件
             if fname in self.contents:
                 openFileHandler.hide()
                 PopupWindow("选择文件已存在")
 
                 return 1 
 
+            # 将文件插入contents中，默认无印章图片
             self.contents[fname] = [openFileHandler.fileName, 0]
+            # 获取总行数
             rowPosition = self.table1.rowCount()
+            # 对第一行作特殊处理，因为第一行初始为空行
+            # 所以在插入第一行时采用的是填充，而不是插
+            # 入新行，从第二行开始插入新行。
             if rowPosition == 1:
                 text = self.table1.item(0, 0)
                 if text is None or text.text() == '':
@@ -346,29 +446,40 @@ class MainDialog(Ui_Dialog):
                     self.table1.insertRow(rowPosition)
             else:
                 self.table1.insertRow(rowPosition)
+            # 绘制第一个文字部分控件的内容
             item = QtWidgets.QTableWidgetItem()
             item.setText(fname)
+            # 设置居中
             item.setTextAlignment(QtCore.Qt.AlignCenter)
+            # 禁止编辑
             item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             self.table1.setItem(rowPosition, 0, item)
+
+            # 绘制第二个cell部分内容
             cell_widget = QWidget()
+            # 初始化checkbox
             chk_bx = QCheckBox()
             chk_bx.clicked.connect(self.handleClicked1)
             chk_bx.setCheckState(QtCore.Qt.Unchecked)
+            # 初始化button
             btn = QtWidgets.QPushButton()
             btn.setText('修改')
             btn.clicked.connect(self.selPic1)
             btn.hide()
+            # 初始化Layout，以设置居中选项
             lay_out = QHBoxLayout(cell_widget)
             lay_out.addWidget(chk_bx)
             lay_out.addWidget(btn)
             lay_out.setAlignment(QtCore.Qt.AlignCenter)
             lay_out.setContentsMargins(0, 0, 0, 0)
+            # 为Widget添加layout
             cell_widget.setLayout(lay_out)
             self.table1.setCellWidget(rowPosition, 1, cell_widget)
 
+            # 为第三部分添加删除按钮
             cell_widget = QWidget()
             btn = QtWidgets.QPushButton()
+            # 绘制删除按钮
             btn.setText('删除')
             btn.setStyleSheet("""
                 QPushButton {
@@ -386,6 +497,7 @@ class MainDialog(Ui_Dialog):
                 }
                               """)
             btn.clicked.connect(self.delFile1)
+            # 设置layout
             lay_out = QHBoxLayout(cell_widget)
             lay_out.addWidget(btn)
             lay_out.setAlignment(QtCore.Qt.AlignCenter)
@@ -396,6 +508,8 @@ class MainDialog(Ui_Dialog):
         return 0
 
     def openFile2(self):
+        """TODO合并为一个
+        """
         openFileHandler = openFDialog('')
         if hasattr(openFileHandler, 'fileName'):
             fname = os.path.basename(openFileHandler.fileName)
@@ -465,6 +579,8 @@ class MainDialog(Ui_Dialog):
         return 0
 
     def openFile3(self):
+        """TODO合并为一个
+        """
         openFileHandler = openFDialog('')
         if hasattr(openFileHandler, 'fileName'):
             fname = os.path.basename(openFileHandler.fileName)
@@ -534,6 +650,8 @@ class MainDialog(Ui_Dialog):
         return 0
 
     def openFile4(self):
+        """TODO合并为一个
+        """
         openFileHandler = openFDialog('')
         if hasattr(openFileHandler, 'fileName'):
             fname = os.path.basename(openFileHandler.fileName)
@@ -680,15 +798,11 @@ class MainDialog(Ui_Dialog):
     def convert(self):
         data = self.getDataList()
         c = FullConverter(data)
-        c.check()
-        if c.errcode != 0:
-            PopupWindow(c.err)
-        else:
-            c.convert()
-            c.setMark()
-            outfile = c.concat()
-            saveDialog = saveFDialog()
-            copyfile(outfile, saveDialog.saveName)
+        c.run_thread()
+        while c.outfile is None and c.errcode == 0:
+            print(c.state, c.prgbar_val, c.prgbar_max)
+        saveDialog = saveFDialog()
+        copyfile(c.outfile, saveDialog.saveName)
 
 class PopupWindow(QWidget):
 
