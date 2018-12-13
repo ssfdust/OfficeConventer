@@ -32,7 +32,6 @@ class Mixin(object):
         2 转换为pdf
         3 盖章
         4 合并
-        7 出错
         """
         self.files = files
         self.err = None
@@ -124,41 +123,100 @@ class Checker(Mixin):
 
 class Converter(Mixin):
     def docToPdf(self, filename):
-        """word转为pdf"""
+        """word转为pdf
+
+           先尝试使用office word来做转换，
+           再使用wps来做转换。
+
+           office软件转换文档为pdf时，会自动加上pdf结尾，
+           所以返回的临时文件要加上pdf的后缀。
+        """
         tempfile = mktemp()
         wdFormatPDF = 17
+        use_wps = False
+        state = False
         try:
             word = win32com.client.Dispatch('Word.Application')
-            # word = comtypes.client.CreateObject('Word.Application')
             doc = word.Documents.Open(filename)
             doc.SaveAs(tempfile, FileFormat=wdFormatPDF)
+            doc.Close()
+            state = True
         except Exception as e:
             self.err = str(e)
-            self.errcode = 10
+            use_wps = True
         finally:
-            doc.Close()
-            word.Quit()
+            try:
+                word.Quit()
+            except Exception as e:
+                self.err = str(e)
 
-        return "{}.pdf".format(tempfile)
+        # wps转换
+        if use_wps:
+            try:
+                wps = win32com.client.Dispatch("KWPS.Application")
+                doc = wps.Documents.Open(filename)
+                doc.SaveAs(tempfile, wdFormatPDF)
+                doc.Close()
+                state = True
+            except Exception as e:
+                self.err = str(e)
+                self.errcode = 10
+            finally:
+                try:
+                    wps.Quit()
+                except Exception:
+                    self.errcode = 110
+
+        if state:
+            return "{}.pdf".format(tempfile)
+        else:
+            return False
 
     def xlsToPdf(self, filename):
-        """execl转为pdf"""
+        """execl转为pdf
+
+            先使用excel来做转换，再使用et来做转换
+        """
         tempfile = mktemp()
         xlFormatPDF = 57
+        use_et = False  # 是否使用et
+        state = False  # 转换状态
         # excel = comtypes.client.CreateObject('Excel.Application')
         try:
             excel = win32com.client.Dispatch('Excel.Application')
             wb = excel.Workbooks.Open(filename)
-        #  ws = wb.Worksheets[1]
             wb.SaveAs(tempfile, FileFormat=xlFormatPDF)
+            wb.Close()
+            state = True
         except Exception as e:
             self.err = str(e)
-            self.errcode = 11
+            use_et = True
         finally:
-            wb.Close()
-            excel.Quit()
+            try:
+                excel.Quit()
+            except Exception as e:
+                self.err = str(e)
+        # et转换
+        if use_et:
+            try:
+                et = win32com.client.Dispatch('KET.Application.9')
+                workbook = et.Workbooks.Open(filename)
+                workbook.ExportAsFixedFormat(0, tempfile)
+                workbook.Close()
+                state = True
+            except Exception as e:
+                self.err = str(e)
+                self.errcode = 11
+            finally:
+                try:
+                    et.Quit()
+                except Exception:
+                    self.errcode = 111
 
-        return "{}.pdf".format(tempfile)
+        if state:
+            return "{}.pdf".format(tempfile)
+        else:
+            return False
 
     def convert(self):
         """转换为pdf
@@ -170,12 +228,20 @@ class Converter(Mixin):
             self.prgbar_val += 1
             filepath = self.files[item][0]
             trans = self.docToPdf(filepath)
-            self.files[item][0] = trans
+            if trans is not None:
+                self.files[item][0] = trans
+            else:
+                return 2
         for item in self.xls:
             self.prgbar_val += 1
             filepath = self.files[item][0]
             trans = self.xlsToPdf(filepath)
-            self.files[item][0] = trans
+            if trans is not None:
+                self.files[item][0] = trans
+            else:
+                return 2
+
+        return 0
 
 class WaterMark(Mixin):
 
@@ -296,9 +362,12 @@ class FullConverter(Checker, Converter, WaterMark):
         if self.errcode != 0:
             return 1
         else:
-            self.convert()
-            self.setMark()
-            self.outfile = self.concat()
+            if self.errcode == 0:
+                self.convert()
+            if self.errcode == 0:
+                self.setMark()
+            if self.errcode == 0:
+                self.outfile = self.concat()
 
     def run_thread(self):
         """多线程方式运行

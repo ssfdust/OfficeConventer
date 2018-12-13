@@ -11,7 +11,8 @@ from PyQt5.QtWidgets import (QWidget, QFileDialog, QMessageBox,
                              QCheckBox, QHBoxLayout, QProgressDialog)
 from PyQt5.QtGui import QPixmap
 from collections import OrderedDict
-from convert import FullConverter
+# from convert import FullConverter
+from test import FullConverter
 from shutil import copyfile
 from demo import Ui_Dialog
 from time import sleep
@@ -166,6 +167,7 @@ class MainDialog(Ui_Dialog):
         如果没有印章文件则以数字0代替。
         """
         Ui_Dialog.__init__(self)
+        self.dialog = dialog
         self.setupUi(dialog)
         self.select1.clicked.connect(self.openFile1)
         self.table1.cellClicked.connect(self.showPic1)
@@ -811,12 +813,17 @@ class MainDialog(Ui_Dialog):
     def convert(self):
         data = self.getDataList()
         c = FullConverter(data)
+        self.dialog.setEnabled(False)
         c.run_thread()
         while c.outfile is None and c.errcode == 0:
             sleep(1)
             print(c.state, c.prgbar_val, c.prgbar_max)
-        saveDialog = saveFDialog()
-        copyfile(c.outfile, saveDialog.saveName)
+        if c.errcode == 0:
+            saveDialog = saveFDialog()
+            copyfile(c.outfile, saveDialog.saveName)
+        else:
+            print('err')
+        self.dialog.setEnabled(True)
 
 class PopupWindow(QWidget):
 
