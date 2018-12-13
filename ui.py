@@ -1,22 +1,46 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'default.ui'
+# Copyright (C) 2018  RedLotus <ssfdust@gmail.com>
+# Author: RedLotus <ssfdust@gmail.com>
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
 #
-# WARNING! All changes made in this file will be lost!
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
 
+"""
+南无大方广佛华严经，华严海会佛菩萨
+南无大方广佛华严经，华严海会佛菩萨
+南无大方广佛华严经，华严海会佛菩萨
+南无大愿地藏王菩萨摩诃萨
+南无大愿地藏王菩萨摩诃萨
+南无大愿地藏王菩萨摩诃萨
+
+UI模块
+
+主界面，文件对话框，进度条对话框等UI模块
+"""
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import (QWidget, QFileDialog, QMessageBox,
                              QCheckBox, QHBoxLayout, QProgressDialog)
 from PyQt5.QtGui import QPixmap
 from collections import OrderedDict
-# from convert import FullConverter
-from test import FullConverter
+from convert import FullConverter
+# from test import FullConverter
 from shutil import copyfile
 from maindlg import Ui_Dialog
 from time import sleep
 
+import sys
 import os
 
 class saveFDialog(QWidget):
@@ -131,7 +155,7 @@ class MainDialog(Ui_Dialog):
         self.table3.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         self.table4.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         self.ok_btn.clicked.connect(self.convert)
-        self.cancel_btn.clicked.connect(exit)
+        self.cancel_btn.clicked.connect(sys.exit)
         self.contents = {}
         self.picfilters = "图像文件(*.jpg *.jpeg *.png *.bmp)"
 
@@ -140,6 +164,7 @@ class MainDialog(Ui_Dialog):
         """
         tablename = table.objectName()
         picobj = getattr(self, "pic{}".format(tablename.replace('table', '')))
+        picobj.setScaledContents(True)
         picobj.setPixmap(QPixmap(pic))
 
     def handleClicked1(self, item):
@@ -772,15 +797,16 @@ class MainDialog(Ui_Dialog):
         prgdlg.setWindowModality(QtCore.Qt.ApplicationModal)
         last_state = c.state
         prgdlg.setRange(0, c.prgbar_max)
+        prg_titles = ['检测文件是否合法...',
+                      '正在转换文件...',
+                      '正在添加水印...',
+                      '正在合并文件']
         while c.outfile is None and c.errcode == 0:
             sleep(0.01)
+            print(c.prgbar_val)
             if c.state != last_state:
                 prgdlg.setRange(0, c.prgbar_max)
-            prg_titles = ['检测文件是否合法...',
-                          '正在转换文件...',
-                          '正在添加水印...',
-                          '正在合并文件']
-            prgdlg.setLabelText(prg_titles[c.state - 1])
+                prgdlg.setLabelText(prg_titles[c.state - 1])
             prgdlg.setValue(c.prgbar_val)
             last_state = c.state
             if prgdlg.wasCanceled():
@@ -792,9 +818,13 @@ class MainDialog(Ui_Dialog):
         if c.errcode == 0:
             saveDialog = saveFDialog()
             if hasattr(saveDialog, 'saveName'):
-                copyfile(c.outfile, saveDialog.saveName)
-        else:
-            print('err')
+                try:
+                    copyfile(c.outfile, saveDialog.saveName)
+                except PermissionError:
+                    PopupWindow(("没有写入文件的权限，请检查文件是"
+                                "否被其他程序打开，或者有足够的权限操作此文件"))
+            elif c.errcode in [11, 111, 10, 110]:
+                PopupWindow("转换pdf失败，请安装最新版的WPS或者Microsoft Office 2010以上版本的办公软件")
         self.dialog.setEnabled(True)
 
 class PopupWindow(QWidget):
@@ -819,7 +849,6 @@ class PopupWindow(QWidget):
 
 
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
     prog = MainDialog(Dialog)

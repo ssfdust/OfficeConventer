@@ -1,4 +1,22 @@
 # -*- coding: utf-8 -*-
+
+# Copyright (C) 2018  RedLotus <ssfdust@gmail.com>
+# Author: RedLotus <ssfdust@gmail.com>
+#
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program.  If not, see
+# <http://www.gnu.org/licenses/>.
+
 """
 南无大方广佛华严经，华严海会佛菩萨
 南无大方广佛华严经，华严海会佛菩萨
@@ -268,7 +286,7 @@ class WaterMark(Mixin):
         width = float(mdbox[2] - mdbox[0])
         height = float(mdbox[3] - mdbox[1])
         # 渲染图片
-        img = self.transparent(item[1])
+        img = self.transparent(item[1], width, height)
         # 新建一个新的pdf
         c = canvas.Canvas(tempmark)
         c.drawImage(img, width * rate, height * rate, mask='auto')
@@ -307,20 +325,27 @@ class WaterMark(Mixin):
             if isinstance(self.files[item][1], str):
                 self.files[item][0] = self.mark(item)
 
-    def transparent(self, image):
+    def transparent(self, image, width, height):
         """透明化处理"""
         handle_file = mktemp() + '.png'
         img = Image.open(image)
+        img = img.convert("RGBA")
+        # 保持宽高比，将图片变为pdf高度的1/6
+        sheight = height / 6.0
+        swidth = img.width * sheight / img.height
+        img = img.resize((int(swidth), int(sheight)))
         # 全部设为0.75透明
         img.putalpha(192)
-        # 处理全部白色为全透明
-        img = img.convert("RGBA")
         data = img.getdata()
 
+        # 处理全部白色为全透明
         new_data = []
         for ele in data:
             if ele[0] == 255 and ele[1] == 255\
                     and ele[2] == 255:
+                new_data.append((255, 255, 255, 0))
+            elif ele[0] == 0 and ele[1] == 0\
+                    and ele[2] == 0:
                 new_data.append((255, 255, 255, 0))
             else:
                 new_data.append(ele)
