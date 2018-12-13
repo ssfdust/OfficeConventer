@@ -369,8 +369,8 @@ class FullConverter(Checker, Converter, WaterMark):
             if self.errcode == 0:
                 self.outfile = self.concat()
 
-    def run_thread(self):
-        """多线程方式运行
+    def run(self):
+        """子进程方式运行
         """
-        t = Thread(target=self.execute, args=())
-        t.start()
+        self.p = Thread(target=self.execute, args=())
+        self.p.start()

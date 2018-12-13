@@ -1,27 +1,32 @@
-from threading import Thread
 from time import sleep
+from threading import Thread
 
 class FullConverter(object):
-    def __init__(self):
+    def __init__(self, data):
         self.state = 0
+        self.errcode = 0
+        self.outfile = None
         self.prgbar_max = 0
         self.prgbar_val = 0
 
     def test(self):
-        self.state = 1
         states = [1, 2, 3, 4]
         max_vals = [20, 15, 400, 900]
         for s, m in zip(states, max_vals):
-            self.prgbar_max = 20
-            self.run(self.prgbar_max)
-            sleep(3)
+            if self.errcode:
+                break
+            self.state = s
+            self.prgbar_max = m
+            self.process(self.prgbar_max)
+        self.outfile = '/tmp/demo.py'
 
-    def run(self, max_val):
+    def process(self, max_val):
         self.prgbar_val = 0
         for i in range(max_val):
             self.prgbar_val += 1
             sleep(0.01)
+            print('ok')
 
-    def run_thread(self):
-        t = Thread(target=self.test)
-        t.start()
+    def run(self):
+        self.p = Thread(target=self.test)
+        self.p.start()

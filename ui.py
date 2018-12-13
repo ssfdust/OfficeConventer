@@ -19,57 +19,6 @@ from time import sleep
 
 import os
 
-class ProcessDialog(QWidget):
-    """进度条对话框
-    """
-
-    def __init__(self, filename=None):
-        super().__init__()
-        self.title = '处理文件'
-        self.left = 300
-        self.top = 120
-        self.width = 640
-        self.height = 480
-        self._filename = filename
-        self.initUI()
-
-    def initUI(self):
-        self.resize(300, 150)
-        self.setWindowTitle(self.title)
-        self.setWindowModality(QtCore.Qt.ApplicationModal)
-
-        # self.openProgressDialog()
-
-        self.show()
-
-    def openProgressDialog(self):    
-        num = 0
-        progress = QProgressDialog(self)
-        progress.setWindowTitle("请稍等")
-        progress.setLabelText("正在转换...")
-        progress.setGeometry(self.left, self.top, self.width, self.height)
-        progress.setCancelButtonText("取消")
-        progress.setMinimumDuration(5)
-        # progress.setAutoReset(False)
-        # progress.setWindowModality(Qt.WindowModal)
-        progress.setWindowModality(QtCore.Qt.ApplicationModal)
-        # progress.setWindowModality(Qt.NonModal)
-        progress.setRange(0, 1000000)
-        # progress.setMinimum(5000000)
-        # progress.setMaximum(10000000)
-        for i in range(num + 1000000):
-            # time.sleep(0.1)
-            # print(i)
-            progress.setValue(i)
-            if progress.wasCanceled():
-                QMessageBox.warning(self, "提示", "操作失败")
-                break
-        # else:
-        #     progress.setValue(i)
-            if i == 1000000:
-                QMessageBox.information(self, "提示", "操作成功")
-                break
-
 class saveFDialog(QWidget):
     """保存对话框
 
@@ -814,13 +763,36 @@ class MainDialog(Ui_Dialog):
         data = self.getDataList()
         c = FullConverter(data)
         self.dialog.setEnabled(False)
-        c.run_thread()
+        c.run()
+        prgdlg = QProgressDialog()
+        prgdlg.setWindowTitle("请稍等")
+        prgdlg.setGeometry(500, 320, 640, 480)
+        prgdlg.setCancelButtonText("取消")
+        prgdlg.setMinimumDuration(5)
+        prgdlg.setWindowModality(QtCore.Qt.ApplicationModal)
+        last_state = c.state
+        prgdlg.setRange(0, c.prgbar_max)
         while c.outfile is None and c.errcode == 0:
-            sleep(1)
-            print(c.state, c.prgbar_val, c.prgbar_max)
+            sleep(0.01)
+            if c.state != last_state:
+                prgdlg.setRange(0, c.prgbar_max)
+            prg_titles = ['检测文件是否合法...',
+                          '正在转换文件...',
+                          '正在添加水印...',
+                          '正在合并文件']
+            prgdlg.setLabelText(prg_titles[c.state - 1])
+            prgdlg.setValue(c.prgbar_val)
+            last_state = c.state
+            if prgdlg.wasCanceled():
+                QMessageBox.warning(prgdlg, "提示", "已取消操作")
+                c.errcode = 7
+                self.dialog.setEnabled(True)
+                return 0
+
         if c.errcode == 0:
             saveDialog = saveFDialog()
-            copyfile(c.outfile, saveDialog.saveName)
+            if hasattr(saveDialog, 'saveName'):
+                copyfile(c.outfile, saveDialog.saveName)
         else:
             print('err')
         self.dialog.setEnabled(True)
