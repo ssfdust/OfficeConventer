@@ -14,7 +14,7 @@ from collections import OrderedDict
 # from convert import FullConverter
 from test import FullConverter
 from shutil import copyfile
-from demo import Ui_Dialog
+from maindlg import Ui_Dialog
 from time import sleep
 
 import os
