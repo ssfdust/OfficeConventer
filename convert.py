@@ -17,7 +17,7 @@ from PyPDF2.utils import PdfReadError
 from reportlab.pdfgen import canvas
 from PIL import Image
 import zipfile
-# import win32com.client
+import win32com.client
 from tempfile import mktemp
 from threading import Thread
 
@@ -55,10 +55,10 @@ class Checker(Mixin):
 
             如果合法的话，就按照分类分好
         """
+        self.state = 1
         self.prgbar_max = len(self.files.keys())
         self.prgbar_val = 0
         for item in self.files.keys():
-            self.state = 1
             self.prgbar_val += 1
             filepath = self.files[item][0]
             if filepath.endswith('.pdf'):
@@ -127,12 +127,17 @@ class Converter(Mixin):
         """word转为pdf"""
         tempfile = mktemp()
         wdFormatPDF = 17
-        word = win32com.client.Dispatch('Word.Application')
-        # word = comtypes.client.CreateObject('Word.Application')
-        doc = word.Documents.Open(filename)
-        doc.SaveAs(tempfile, FileFormat=wdFormatPDF)
-        doc.Close()
-        word.Quit()
+        try:
+            word = win32com.client.Dispatch('Word.Application')
+            # word = comtypes.client.CreateObject('Word.Application')
+            doc = word.Documents.Open(filename)
+            doc.SaveAs(tempfile, FileFormat=wdFormatPDF)
+        except Exception as e:
+            self.err = str(e)
+            self.errcode = 10
+        finally:
+            doc.Close()
+            word.Quit()
 
         return "{}.pdf".format(tempfile)
 
@@ -141,12 +146,17 @@ class Converter(Mixin):
         tempfile = mktemp()
         xlFormatPDF = 57
         # excel = comtypes.client.CreateObject('Excel.Application')
-        excel = win32com.client.Dispatch('Excel.Application')
-        wb = excel.Workbooks.Open(filename)
-        ws = wb.Worksheets[1]
-        wb.SaveAs(tempfile, FileFormat=xlFormatPDF)
-        wb.Close()
-        excel.Quit()
+        try:
+            excel = win32com.client.Dispatch('Excel.Application')
+            wb = excel.Workbooks.Open(filename)
+        #  ws = wb.Worksheets[1]
+            wb.SaveAs(tempfile, FileFormat=xlFormatPDF)
+        except Exception as e:
+            self.err = str(e)
+            self.errcode = 11
+        finally:
+            wb.Close()
+            excel.Quit()
 
         return "{}.pdf".format(tempfile)
 
@@ -293,5 +303,5 @@ class FullConverter(Checker, Converter, WaterMark):
     def run_thread(self):
         """多线程方式运行
         """
-        t = Thread(target=self.execute, args=None)
+        t = Thread(target=self.execute, args=())
         t.start()

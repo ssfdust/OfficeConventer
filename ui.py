@@ -14,6 +14,7 @@ from collections import OrderedDict
 from convert import FullConverter
 from shutil import copyfile
 from demo import Ui_Dialog
+from time import sleep
 
 import os
 
@@ -174,6 +175,10 @@ class MainDialog(Ui_Dialog):
         self.table3.cellClicked.connect(self.showPic3)
         self.select4.clicked.connect(self.openFile4)
         self.table4.cellClicked.connect(self.showPic4)
+        self.table1.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        self.table2.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        self.table3.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
+        self.table4.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         self.ok_btn.clicked.connect(self.convert)
         self.cancel_btn.clicked.connect(exit)
         self.contents = {}
@@ -449,6 +454,7 @@ class MainDialog(Ui_Dialog):
             # 绘制第一个文字部分控件的内容
             item = QtWidgets.QTableWidgetItem()
             item.setText(fname)
+            item.setToolTip(fname)
             # 设置居中
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             # 禁止编辑
@@ -531,6 +537,7 @@ class MainDialog(Ui_Dialog):
                 self.table2.insertRow(rowPosition)
             item = QtWidgets.QTableWidgetItem()
             item.setText(fname)
+            item.setToolTip(fname)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             self.table2.setItem(rowPosition, 0, item)
@@ -602,6 +609,7 @@ class MainDialog(Ui_Dialog):
                 self.table3.insertRow(rowPosition)
             item = QtWidgets.QTableWidgetItem()
             item.setText(fname)
+            item.setToolTip(fname)
             item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.table3.setItem(rowPosition, 0, item)
@@ -673,6 +681,7 @@ class MainDialog(Ui_Dialog):
                 self.table4.insertRow(rowPosition)
             item = QtWidgets.QTableWidgetItem()
             item.setText(fname)
+            item.setToolTip(fname)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             self.table4.setItem(rowPosition, 0, item)
@@ -789,6 +798,10 @@ class MainDialog(Ui_Dialog):
         for tab in [self.table1, self.table2, self.table3, self.table4]:
             i = 0
             while i < tab.rowCount():
+                item = tab.item(i, 0)
+                if item is None or item.text() == '':
+                    i += 1
+                    continue
                 fname = tab.item(i, 0).text()
                 data[fname] = self.contents[fname]
                 i += 1
@@ -800,6 +813,7 @@ class MainDialog(Ui_Dialog):
         c = FullConverter(data)
         c.run_thread()
         while c.outfile is None and c.errcode == 0:
+            sleep(1)
             print(c.state, c.prgbar_val, c.prgbar_max)
         saveDialog = saveFDialog()
         copyfile(c.outfile, saveDialog.saveName)

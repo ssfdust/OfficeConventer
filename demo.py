@@ -408,6 +408,8 @@ class Ui_Dialog(object):
         self.label_14.setGeometry(QtCore.QRect(461, 352, 160, 43))
         self.label_14.setStyleSheet("QLabel {\n"
 "    border: 1px solid #C6C6C6;\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));\n"
+"    color: white;\n"
 "}")
         self.label_14.setAlignment(QtCore.Qt.AlignCenter)
         self.label_14.setObjectName("label_14")
@@ -415,6 +417,8 @@ class Ui_Dialog(object):
         self.label_15.setGeometry(QtCore.QRect(620, 352, 160, 43))
         self.label_15.setStyleSheet("QLabel {\n"
 "    border: 1px solid #C6C6C6;\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));\n"
+"    color: white;\n"
 "}")
         self.label_15.setAlignment(QtCore.Qt.AlignCenter)
         self.label_15.setObjectName("label_15")
@@ -422,6 +426,8 @@ class Ui_Dialog(object):
         self.label_16.setGeometry(QtCore.QRect(938, 352, 160, 43))
         self.label_16.setStyleSheet("QLabel {\n"
 "    border: 1px solid #C6C6C6;\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));\n"
+"    color: white;\n"
 "}")
         self.label_16.setAlignment(QtCore.Qt.AlignCenter)
         self.label_16.setObjectName("label_16")
@@ -429,6 +435,8 @@ class Ui_Dialog(object):
         self.label_17.setGeometry(QtCore.QRect(779, 352, 160, 43))
         self.label_17.setStyleSheet("QLabel {\n"
 "    border: 1px solid #C6C6C6;\n"
+"    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));\n"
+"    color: white;\n"
 "}")
         self.label_17.setAlignment(QtCore.Qt.AlignCenter)
         self.label_17.setObjectName("label_17")

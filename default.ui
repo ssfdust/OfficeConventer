@@ -851,6 +851,8 @@ border-style: outset;
    <property name="styleSheet">
     <string notr="true">QLabel {
 	border: 1px solid #C6C6C6;
+	background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));
+	color: white;
 }</string>
    </property>
    <property name="text">
@@ -872,6 +874,8 @@ border-style: outset;
    <property name="styleSheet">
     <string notr="true">QLabel {
 	border: 1px solid #C6C6C6;
+	background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));
+	color: white;
 }</string>
    </property>
    <property name="text">
@@ -893,6 +897,8 @@ border-style: outset;
    <property name="styleSheet">
     <string notr="true">QLabel {
 	border: 1px solid #C6C6C6;
+	background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));
+	color: white;
 }</string>
    </property>
    <property name="text">
@@ -914,6 +920,8 @@ border-style: outset;
    <property name="styleSheet">
     <string notr="true">QLabel {
 	border: 1px solid #C6C6C6;
+	background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(14, 193, 214, 255), stop:1 rgba(14, 161, 216, 255));
+	color: white;
 }</string>
    </property>
    <property name="text">
