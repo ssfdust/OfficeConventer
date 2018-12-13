@@ -1,7 +1,7 @@
 简介
 ===========
 一个可以将Word以及Excel合成为pdf的小工具。
-
+![alt text](./screenshots/preview.png)
 
 依赖
 ===========

@@ -801,6 +801,7 @@ class MainDialog(Ui_Dialog):
                       '正在转换文件...',
                       '正在添加水印...',
                       '正在合并文件']
+        prgdlg.setLabelText(prg_titles[c.state - 1])
         while c.outfile is None and c.errcode == 0:
             sleep(0.01)
             print(c.prgbar_val)
@@ -850,7 +851,7 @@ class PopupWindow(QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
+    Dialog = QtWidgets.QMainWindow()
     prog = MainDialog(Dialog)
     Dialog.show()
-    sys.exit(Dialog.exec_())
+    sys.exit(app.exec_())
